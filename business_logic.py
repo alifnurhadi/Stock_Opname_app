@@ -100,9 +100,6 @@ class DBManager:
         query = 'INSERT INTO stok_opname(sku_code , current) VALUES (? , ?)'
         self.commit(query , params)
 
-    def handle_kolian(self , ):
-
-        return
 
     def show_current(self , params=None):
         query = """SELECT * 
@@ -132,8 +129,24 @@ class DBManager:
             cnc.execute('DELETE FROM stok_opname WHERE sku_code = ?' , (sku,))
             cnc.commit()
 
+    def handle_kolian(self , args1 , args2 )->int:
+        if not args1 or not args2 :
+            return None
+        else :
+            result = args1 * args2
+        return result
+    
+    def modify_subtract_quantity(self , column , params):
+        query = f"""
+                UPDATE stok_opname
+                SET
+                    {column} = {column} - ?
+                    update_at = (datetime('now', 'localtime'))
+                    WHERE sku_code = ? ;
+                """
+        self.commit(query ,params)
+
     def modify_add_quantity(self , column , params):
-        column = ''
         query = f"""
                 UPDATE stok_opname
                 SET
