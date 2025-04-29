@@ -21,11 +21,11 @@ class Main_UI():
 
         self.root = Tk()
         self.root.geometry("901x582")
-        self.root.configure(bg = "#F6F6EF")
+        self.root.configure(bg = "#CECECA")
         self.root.title("ASTEROS STOCK OPNAME")
         self.root.resizable(False,False)
 
-        self.main = Canvas(self.root, bg = "#F6F6EF", height = 582, width = 901, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.main = Canvas(self.root, bg = "#CECECA", height = 582, width = 901, bd = 0, highlightthickness = 0, relief = "ridge")
         self.main.place(x = 0, y = 0)
         
 
