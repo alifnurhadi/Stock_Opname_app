@@ -43,12 +43,12 @@ class StokOpname_logs :
         return self.logs
     
 class DBManager:
-    def __init__(self , sku_path:str):
+    def __init__(self , sku_path:str=None):
         self.sqlite_path = './stok_opname.db'
         self.init_db()
         absolute_path = os.path.abspath(self.sqlite_path)
         self.connection_uri = f"sqlite:///{absolute_path}"
-        self.sku_path = sku_path
+        self.sku_path = sku_path if not None else []
 
         self.log_progress = StokOpname_logs()
 
@@ -68,7 +68,7 @@ class DBManager:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS so_logs (
                         create_at TIMESTAMP DEFAULT (datetime('now', 'localtime')),
-                        sku_code VARCHAR(9) NOT NULLABLE,
+                        sku_code VARCHAR(9),
                         activity TEXT
                 )
             """)
@@ -86,14 +86,17 @@ class DBManager:
             return c_result.fetchone() if one else c_result.fetchall()
         
     def insert_basic(self):
-        try:
-            sku = read_excel(self.sku_path , schema_overrides={'SKU':Utf8})
-        except :
-            return 'need to have SKU column name on ur data maybe it named differently make sure the data consist of 2 column 1st SKU and 2nd is for column contain qty of it'
-        
-        sku = sku.with_columns(col(sku.columns[-1]).cast(Int64)).rename({sku.columns[-1]:'Qty'})
-        params = list(sku.iter_rows())
+        if self.sku_path != []:
+            try:
+                sku = read_excel(self.sku_path , schema_overrides={'SKU':Utf8})
+            except :
+                return 'need to have SKU column name on ur data maybe it named differently make sure the data consist of 2 column 1st SKU and 2nd is for column contain qty of it'
+            
+            sku = sku.with_columns(col(sku.columns[-1]).cast(Int64)).rename({sku.columns[-1]:'Qty'})
+            params = list(sku.iter_rows())
 
+        else : 
+            sku = []
         query = 'INSERT INTO stok_opname(sku_code , current) VALUES (? , ?)'
         self.commit(query , params)
 
