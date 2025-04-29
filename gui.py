@@ -7,8 +7,6 @@ from pathlib import Path
 from tkinter import FLAT, Tk, Canvas, Entry, PhotoImage ,StringVar , Text ,Frame
 from tkinter.ttk import OptionMenu, Radiobutton ,Style
 
-from button import ButtonLogic
-
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\MARKETING SUPPORT\Documents\asteros\astrs_work\database\General\Apps\App3\build\assets\frame0")
@@ -17,7 +15,7 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\MARKETING SUPPORT\Documents\asteros\
 #     return os.path.join(os.path.dirname(__file__), "assets", filename)
 
 
-class Main_UI(ButtonLogic):
+class Main_UI():
     def __init__(self):
         super().__init__()
 
