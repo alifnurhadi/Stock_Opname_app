@@ -53,7 +53,7 @@ class Main_UI():
         self.main.create_text( 65.00000762939453, 127.0, anchor="nw", text="SESSION", fill="#000000", font=("Inter Bold", 12 * -1 ))
         sessions = ["SO 1", "SO 2"]
         default_value = StringVar(value="SO 2")
-        style = Style()  # Instantiate Style
+        style = Style() 
         style.configure("warnaopsi.TMenubutton", background="#f1f2e0", foreground="#000000", borderwidth=2, relief="flat")
         self.session = OptionMenu(self.root, default_value, *sessions, style="warnaopsi.TMenubutton")
         self.session.place(x=50, y=200, width=80, height=30)
