@@ -2,7 +2,7 @@
 # Explicit imports to satisfy Flake8
 import os
 from pathlib import Path
-from tkinter import StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage , messagebox
+from tkinter import StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
 from tkinter.ttk import Combobox, OptionMenu, Style
 from typing import Any
 from PIL import ImageTk
@@ -27,7 +27,7 @@ def readloc():
             if not location:
                 return "locations.txt is empty"
         split_loc = location.split(',')
-        locations_display = '\n'.join([loc for loc in split_loc if loc])  # Remove empty entries
+        locations_display = '\n'.join([loc.strip() for loc in split_loc if loc != ' '])
         return locations_display if locations_display else "No valid locations found"
     except FileNotFoundError:
         return "locations.txt not found in current directory"
@@ -97,27 +97,18 @@ entry_koli2.insert(0,'0')
 entry_isi1.insert(0,'0')
 entry_isi2.insert(0,'0')
 
-def get_fullqty():
-    hitungkolian1 = logics.handle_kolian( int(entry_koli1.get()) , int(entry_isi1.get()))
-    hitungkolian2 = logics.handle_kolian( int(entry_koli2.get()) , int(entry_isi2.get()))
-    fullqty:int = hitungkolian1 + hitungkolian2 + int(entry_qty.get()) + int(entry_qty_tambahan.get())
-    return fullqty
-
 entry_image_12 = PhotoImage(file=relative_to_assets("entry_12.png"))
 entry_bg_12 = canvas.create_image(670.0, 162.5, image=entry_image_12)
 entry_calculator = Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
 entry_calculator.place(x=570.0, y=145.0, width=200.0, height=33.0)
 
-
 # Global variables for Combobox
 sessions = ["SO 1", "SO 2"]
 default_value = StringVar(value="SO 2")
 
-# Functions to handle Combobox behavior
 def on_session_select(event ,combobox):
     selected = default_value.get()
     combobox.configure(values=[selected])
-
 def reset_session(combobox):
     default_value.set("SO 2")
     combobox.configure(values=sessions)
@@ -129,6 +120,12 @@ session_combobox.place(x=50, y=200, width=80, height=30)
 session_combobox.bind("<<ComboboxSelected>>", lambda event: on_session_select(event, session_combobox))
 reset_button = Button( canvas, text="Reset Session", command= lambda : reset_session(session_combobox), bg="#D9D9D9", fg="#000716", relief="flat" )
 reset_button.place(x=50, y=250, width=70, height=25 , anchor='nw')
+
+def get_fullqty():
+    hitungkolian1 = logics.handle_kolian( int(entry_koli1.get()) , int(entry_isi1.get()))
+    hitungkolian2 = logics.handle_kolian( int(entry_koli2.get()) , int(entry_isi2.get()))
+    fullqty:int = hitungkolian1 + hitungkolian2 + int(entry_qty.get()) + int(entry_qty_tambahan.get())
+    return fullqty
 
 def debug():
     data = [entry_sku , entry_qty , entry_qty_tambahan , entry_koli1 , 
@@ -149,13 +146,47 @@ canvas.create_image(835.0, 69.0, image=image_image_1)
 3 = Right mouse button.
 '''
 
+def browse_file():
+        filename = filedialog.askopenfilename(
+            title="Select Excel File",
+            filetypes=(("Excel files", "*.xlsx *.xls"), ("All files", "*.*"))
+        )
+        if filename:
+            entry_upload.delete(0, 'end')
+            entry_upload.insert(0, filename)
+        try:
+            logics.insert_basic
+        except:
+            return
+
 button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
 button_browse = Button(image=button_image_1, borderwidth=0, highlightthickness=0, command=lambda: print("Browse"), relief="flat")
 button_browse.place(x=398.0, y=55.0, width=89.0, height=51.0)
+button_browse.bind('<Button-1>', lambda x : browse_file())
+
+def add_data():
+    
+    sku = entry_sku.get()
+    session = session_combobox.get()
+    location = entry_location.get()
+    qty = get_fullqty()
+    kets = entry_keterangan.get()
+
+    try:
+        logics.inserting_main_data()
+    except:
+        return
+
 
 button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
 button_add = Button(image=button_image_3, borderwidth=0, highlightthickness=0, command=lambda: print("Add"), relief="flat")
 button_add.place(x=28.0, y=393.0, width=140.0, height=38.0)
+
+
+button_image_6 = PhotoImage(file=relative_to_assets("button_6.png"))
+button_subtract = Button(image=button_image_6, text="( - ) Reduce", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("reduce clicked"), relief="flat")
+button_subtract.place(x=189.0, y=393.0, width=140.0, height=38.0)
+
 
 button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
 button_showall_selisih = Button(image=button_image_4, text="Show all selisih", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("Show all selisih"), relief="flat")
@@ -165,9 +196,6 @@ button_image_5 = PhotoImage(file=relative_to_assets("button_5.png"))
 button_export = Button(image=button_image_5, borderwidth=0, highlightthickness=0, command=lambda: print("Export Out"), relief="flat")
 button_export.place(x=721.0, y=502.0, width=140.0, height=38.0)
 
-button_image_6 = PhotoImage(file=relative_to_assets("button_6.png"))
-button_subtract = Button(image=button_image_6, text="( - ) Reduce", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("reduce clicked"), relief="flat")
-button_subtract.place(x=189.0, y=393.0, width=140.0, height=38.0)
 
 button_image_7 = PhotoImage(file=relative_to_assets("button_7.png"))
 button_showcurrent = Button(image=button_image_7, text="Show Current Data", compound="center", font=("Arial", 10, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("show current data"), relief="flat")
