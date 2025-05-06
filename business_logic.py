@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+from typing import Any
 
 from polars import read_excel, ColumnNotFoundError , col , read_database_uri
 from polars.datatypes import Utf8 , Int64 
@@ -69,6 +70,7 @@ class DBManager:
                 CREATE TABLE IF NOT EXISTS so_logs (
                         create_at TIMESTAMP DEFAULT (datetime('now', 'localtime')),
                         sku_code VARCHAR(9),
+                        quantity INTEGER NULLABLE
                         activity TEXT
                 )
             """)
@@ -79,11 +81,19 @@ class DBManager:
             reader.execute(query, param)
             reader.commit()
             
-    def fetchs (self , query , params , one:bool = False)-> list[tuple]|tuple:
+    def fetchs (self , query , params:tuple, one:bool = False)-> list[tuple]|tuple:
+
         with sqlite3.connect(self.sqlite_path) as reader:
             curr = reader.cursor()
             c_result = curr.execute(query, params)
             return c_result.fetchone() if one else c_result.fetchall()
+        
+    def insertLogs(self,params:tuple[Any]):
+        '''INSERT INTO so_logs(sku_code, quantity , activity) VALUES (? , ? , ?)'''
+
+        querys = '''INSERT INTO so_logs(sku_code, quantity , activity) VALUES (? , ? , ?)'''
+
+        self.commit(query=querys , param=params)
         
     def insert_basic(self):
         if self.sku_path != []:
@@ -101,10 +111,12 @@ class DBManager:
         self.commit(query , params)
 
 
-    def show_current(self , params=None):
+    def show_current(self)->list[tuple[any],tuple[any]]:
         query = """SELECT * 
         FROM stok_opname ; """
-        return self.fetchs(query= query , params=params)
+        with sqlite3.connect(self.sqlite_path) as dbs :
+            return dbs.execute(query).fetchall()
+        
 
     def export_all(self , name):
         query = """
@@ -136,7 +148,8 @@ class DBManager:
             result = args1 * args2
         return result
     
-    def modify_subtract_quantity(self , column , params):
+    def modify_subtract_quantity(self , column , params:tuple[Any]):
+        '''## params are subtract value and sku code in order respectively'''
         query = f"""
                 UPDATE stok_opname
                 SET
@@ -146,7 +159,8 @@ class DBManager:
                 """
         self.commit(query ,params)
 
-    def modify_add_quantity(self , column , params):
+    def modify_add_quantity(self , column , params:tuple[Any]):
+        '''## params are added value and sku code in order respectively'''
         query = f"""
                 UPDATE stok_opname
                 SET
@@ -165,7 +179,7 @@ class DBManager:
             self.log_progress.logger( types , record)
             return
 
-        query = f'''INSERT INTO stok_opname (sku_code , {'so_1' if 'SO1' in types else 'so_2'} , location) VALUES ( ?, ?, ? );'''
+        query = f'''INSERT INTO stok_opname (sku_code , {'so_1' if 'SO 1' in types else 'so_2'} , location) VALUES ( ?, ?, ? );'''
 
         theact = f'ADD {params[1]} Locate {params[-1]}'
         query2 = f'''INSERT INTO so_logs ( sku_code , activity ) VALUES (  ?, ? );'''

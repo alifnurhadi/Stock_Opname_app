@@ -3,11 +3,12 @@
 import os
 from pathlib import Path
 import random
-from tkinter import StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
+from tkinter import Label, Listbox, StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
 from tkinter.ttk import Combobox, OptionMenu, Style
-from typing import Any
+from typing import Any, Dict
 from PIL import ImageTk
 from business_logic import *
+from rapidfuzz import fuzz , process
 
 
 OUTPUT_PATH = Path(__file__).parent
@@ -80,9 +81,6 @@ def generate_fun():
     randomtext = ['keep smule' , 'jangan semangat tetaplah sedih','random quotes']
     canvas.itemconfig(quotes, text=random.choice(randomtext))
     quotes =canvas.create_text(561.0, 191.0, anchor="nw", text=random.choice(randomtext), fill="#000000", font=("Inter Bold", -24) , width=300)
-
-
-
 
 # image obj
 entry_image_4 = PhotoImage(file=relative_to_assets("entry_4.png"))
@@ -168,6 +166,21 @@ canvas.create_text(800.0, 96.0, anchor="nw", text="Maker : Ben", fill="#000000",
 image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
 canvas.create_image(835.0, 69.0, image=image_image_1)
 
+RECAP_ENTRIES : Dict[str,Any] = {
+    'upload':entry_upload,
+    'session':session_combobox,
+    'location':entry_location,
+    'sku':entry_sku,
+    'qty':entry_qty,
+    'qty_tambahan':entry_qty_tambahan,
+    'keterangan':entry_keterangan,
+    'isi1':entry_isi1,
+    'isi2':entry_isi2,
+    'koli1':entry_koli1,
+    'koli2':entry_koli2,
+    'calculate':entry_calculator
+}
+
 def debug():
     data = [entry_sku , entry_qty , entry_qty_tambahan , entry_koli1 , 
             entry_koli2 , entry_upload , entry_keterangan , entry_result , 
@@ -181,7 +194,6 @@ def get_fullqty():
     fullqty:int = hitungkolian1 + hitungkolian2 + int(entry_qty.get()) + int(entry_qty_tambahan.get())
     return fullqty
 
-
 def browse_file():
         filename = filedialog.askopenfilename(
             title="Select Excel File",
@@ -191,15 +203,13 @@ def browse_file():
             entry_upload.delete(0, 'end')
             entry_upload.insert(0, filename)
         try:
-            logics.insert_basic
+            afterbrowse()
         except:
             return
 
 button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
 button_browse = Button(image=button_image_1, borderwidth=0, highlightthickness=0, command=lambda: print("Browse"), relief="flat")
 button_browse.place(x=398.0, y=55.0, width=89.0, height=51.0)
-
-
 button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
 button_add = Button(image=button_image_3, borderwidth=0, highlightthickness=0, command=lambda: print("Add"), relief="flat")
 button_add.place(x=28.0, y=393.0, width=140.0, height=38.0)
@@ -237,14 +247,27 @@ button_image_11 = PhotoImage(file=relative_to_assets("button_11.png"))
 button_test1 = Button(image=button_image_11,borderwidth=0,highlightthickness=0,command=lambda: print('sss'),text='in-test 1!',font=('Arial',12 , 'bold') , fg='white',compound='center',relief="flat")
 button_test1.place(x=540.0,y=340.0,width=140.0,height=38.0)
 
-def create_logs(action)->str:
+def create_logs(action , recap_entry: Dict[str, Entry] = RECAP_ENTRIES)->str:
     ket = action
-    if entry_koli1.get() != '0' or entry_koli1.get() != '0' & entry_keterangan.get() != None:
-        texts = f'''{datetime.now().strftime('%H:%M "%d/%m')}-{ket} , {entry_sku.get()} - {get_fullqty()} - at {session_combobox.get()}
-- {entry_keterangan.get()}'''
-    elif  entry_koli1.get() != '0' or entry_koli1.get() != '0':
-        texts = f'''{datetime.now().strftime('%H:%M "%d/%m')}-{ket} , {entry_sku.get()} - {get_fullqty()} - at {session_combobox.get()}
-- {entry_koli1.get()}@{entry_isi1.get()} & {entry_koli1.get()}@{entry_isi1.get()}'''
+    sku = recap_entry["sku"].get()
+    qty = recap_entry["qty"].get()
+    qty_tambahan = recap_entry["qty_tambahan"].get()
+    isi1 = recap_entry["isi1"].get()
+    koli1 = recap_entry["koli1"].get()
+    isi2 = recap_entry["isi2"].get()
+    koli2 = recap_entry["koli2"].get()
+    keterangan = recap_entry["keterangan"].get()
+    session = recap_entry["session"].get()
+
+    texts = ''
+    
+    texts = f"{datetime.now().strftime('%H:%M || "%d/%m')} - {ket}, {sku} - (main: {qty}, opt: {qty_tambahan}) - at {session}"
+
+    if keterangan or koli1 != '0' or koli2 != '0':
+        texts += f"\n- (isi & kolian: {isi1}, {koli1}, {isi2}, {koli2}) - {keterangan or 'No keterangan'}"
+    elif koli1 != '0' or koli2 != '0':
+        texts += f"\n- (isi & kolian: {isi1}, {koli1}, {isi2}, {koli2}) - {koli1}@{isi1} & {koli2}@{isi2}"
+
     return texts
 
 def simplecalculate():
@@ -290,18 +313,27 @@ def simplecalculate():
     
     return messagebox.showinfo('Result' , f'hasil itungannya: \n {reslt} \n\n ')
 
-
 def afterbrowse():
     try:
         logics.init_db()
     except Exception as e:
         messagebox.showerror('Error',e)
 
-    try:
-        DBManager(entry_upload.get()).insert_basic()
-    except Exception as e:
-        messagebox.showerror('Error',e)
+    init = messagebox.askquestion('Addiionals','want to intialize data?')
+    if init == 'yes':
+        try:
+            DBManager(entry_upload.get()).insert_basic()
+        except Exception as e:
+            messagebox.showerror('Error',e)
 
+def clear_all_entries():
+    clear = messagebox.askquestion('ANSWER','want to clear all?')
+    if clear == 'yes':
+        for k , v in RECAP_ENTRIES:
+            if k == 'session':
+                reset_session(session_combobox)
+            else:
+                v.delete(0,'end')
 
 def submitData():
     
@@ -309,7 +341,9 @@ def submitData():
     session = session_combobox.get()
     location = entry_location.get()
     qty = get_fullqty()
-    kets = entry_keterangan.get()
+    addvalue = entry_qty_tambahan.get()
+    if addvalue == None or addvalue == '0':
+        messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
 
     parame1 = (sku,qty,location)
     parame2 = (qty , sku)
@@ -318,16 +352,112 @@ def submitData():
 
     try:
         logics.inserting_main_data(session , parame1)
-        logics.commit()
+        logics.insertLogs((sku,qty ,logs))
+        clear_all_entries()
+        
     except:
-        logics.updating_main_data(session , parame2)
+        messagebox.showinfo('WARNING' ,'There might already value there, might consider to update instead of add')
+        updatevalue = messagebox.askquestion('Next Move','Move to update its value and reset older ones?')
+        if updatevalue == 'no':
+            adddingdata = messagebox.askquestion('Other Move', 'want to add more to the current one?')
+            if adddingdata == 'yes':
+                logics.modify_add_quantity(session,(addvalue,sku))
+                clear_all_entries()
+                
+        else :
+            logics.updating_main_data(session , parame2)
+            clear_all_entries()
+
+def subtract_it():
+    addvalue = entry_qty_tambahan.get()
+    if addvalue == None or addvalue == '0':
+        messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
+    param = (addvalue , RECAP_ENTRIES['sku'].get())
+    logics.modify_subtract_quantity(RECAP_ENTRIES['session'].get(), param)
+
+    messagebox.showinfo('Logs :',f"u've just subtracting data from {RECAP_ENTRIES['sku'].get()} about {addvalue}")
+
+
+def testingbutton():
+    respon = messagebox.askquestion('Are u sure ?','want to continue to another operation?')
+    print(f'respon 1 : {respon} + {create_logs('tambah')} ')
+    if respon == 'no':
+        respon = messagebox.askquestion('Are u sure ?','want to continue to another operation?')
+        print(f'respon 2 :  ({respon} + {create_logs('tambah')})')
+    else:
+        print(f'respon 1 : {respon} + {create_logs('tambah')} ')
+        messagebox.showinfo('Thank','You')
+
+
+suggestion_list = Listbox(window, height=5, width=2, font=("Arial", 10))
+suggestion_list.place(x=372.0, y=178.0, width=99.0)
+suggestion_list_visible = False
+
+def hide_suggestions():
+    global suggestion_list_visible 
+    suggestion_list_visible = False
+    suggestion_list.place_forget()
+
+status_label = Label(window, text="Status: Ready", font=("Arial", 10), bg="#CDCDCA")
+status_label.place(x=555, y=55)
+
+def show_suggestions():
+    global suggestion_list_visible
+    suggestion_list_visible = True
+    suggestion_list.place(x=372.0, y=178.0, width=99.0)
+
+
+def select_suggestion(event):
+    if suggestion_list.curselection():
+        selected = suggestion_list.get(suggestion_list.curselection())
+        entry_sku.delete(0, "end")
+        entry_sku.insert(0, selected)
+        hide_suggestions()
+        status_label.config(text=f"Status: Selected {selected}")
+
+def update_suggestions(event):
+    skusall = logics.show_current()
+    validsku = [code[0] for code in skusall]
+    query = entry_sku.get().strip()
+    if len(query) < 2:  # Require at least 2 characters
+        hide_suggestions()
+        status_label.config(text="Status: Enter at least 2 characters")
+        return
+
+    # Fuzzy match
+    matches = process.extract(query, validsku , scorer=fuzz.partial_ratio, limit=5)
+    suggestions = [match[0] for match in matches if match[1] > 70]  # Threshold: 70%
+
+    # Update Listbox
+    suggestion_list.delete(0, "end")
+    for suggestion in suggestions:
+        suggestion_list.insert("end", suggestion)
+
+    if suggestions:
+        show_suggestions()
+        status_label.config(text=f"Status: {len(suggestions)} suggestions")
+    else:
+        hide_suggestions()
+        status_label.config(text="Status: No matches found")
+
+hide_suggestions()
+entry_sku.bind("<KeyRelease>", update_suggestions)
+suggestion_list.bind("<<ListboxSelect>>", select_suggestion)
+
+def show_all():
+    data = logics.show_current()
+
 
 window.bind_class('Button','<Button-1>',lambda x : generate_fun() , add='+')
 button_browse.bind('<Button-1>', lambda x : browse_file())
 button_validloc.bind("<Button-1>", lambda event: messagebox.showinfo("Valid Locations", f"valid locations are :\n{readloc()}"))
 button_calculating.bind('<Button-1>' , lambda x : simplecalculate())
+button_add.bind('<Button-1>' , lambda x : submitData())
+button_subtract.bind('<Button-1>',lambda x : subtract_it())
+button_showcurrent.bind()
+button_showall_selisih.bind()
 
-
+button_test2.bind('<Button-1>' , lambda x : testingbutton())
 window.resizable(False, False)
 
 """
