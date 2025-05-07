@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 import random
-from tkinter import Label, Listbox, StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
+from tkinter import Frame, Label, Listbox, StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
 from tkinter.ttk import Combobox, OptionMenu, Style
 from typing import Any, Dict
 from PIL import ImageTk
@@ -11,7 +11,8 @@ from business_logic import *
 import polars as pl
 from rapidfuzz import fuzz , process
 from pandastable import Table
-
+import numexpr
+numexpr.set_num_threads(4)
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\MARKETING SUPPORT\Documents\asteros\astrs_work\special_\result\app_so\build\assets\frame0")
@@ -328,12 +329,14 @@ def afterbrowse():
 # except Exception as e:
 #     messagebox.showerror('Error',e)
 
-def clear_all_entries():
+def clear_all_entries(entries = RECAP_ENTRIES):
+    
     clear = messagebox.askquestion('ANSWER','want to clear all?')
     if clear == 'yes':
-        for k , v in RECAP_ENTRIES:
+        for k , v in entries:
+            print(v.get())
             if k == 'session':
-                reset_session(session_combobox)
+                reset_session(v)
             else:
                 v.delete(0,'end')
 
@@ -371,6 +374,7 @@ def submitData():
             clear_all_entries()
 
 def subtract_it():
+    global RECAP_ENTRIES
     addvalue = entry_qty_tambahan.get()
     if addvalue == None or addvalue == '0':
         messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
@@ -456,8 +460,57 @@ hide_suggestions()
 entry_sku.bind("<KeyRelease>", update_suggestions)
 suggestion_list.bind("<<ListboxSelect>>", select_suggestion)
 
+def create_table(parent_frame, dataframe):
+    frame = Frame(parent_frame)
+    frame.pack(fill="both", expand=True)
+    table = Table(frame, dataframe=dataframe, showtoolbar=True, showstatusbar=True)
+    table.show()
+    return table
+
+# Variable to store the table object (initially None)
+table = None
+
+# Add buttons for interaction
+def print_table():
+    global table
+    if table is not None:
+        print(table.model.df)
+    else:
+        print("Table not created yet")
+
+def create_and_update_table(df):
+    global table
+    if table is None:
+        # Create the table only if it doesn't exist
+        table = create_table(window, df)
+    # Update the DataFrame (e.g., change a value)
+    df.loc[df['SKU'] == '50706', 'week1'] = 5
+    table.model.df = df  # Update the table's DataFrame
+    table.redraw()
+
 def show_all():
     data = logics.show_current()
+    sku = []
+    current = []
+    so_1 =  []
+    so_2 = []
+    locs = []
+    for d in data:
+        sku.append(d[0])
+        current.append(d[1])
+        so_1.append(d[2])
+        so_2.append(d[3])
+        locs.append(d[4])
+
+    df = pl.DataFrame({
+        'SKU':sku,
+        'Current':current,
+        'SO 1':so_1,
+        'SO 2':so_2,
+        'Location':locs,
+    })
+    pddf =df.to_pandas()
+
 
 
 window.bind_class('Button','<Button-1>',lambda x : generate_fun() , add='+')
@@ -468,6 +521,7 @@ button_add.bind('<Button-1>' , lambda x : submitData())
 button_subtract.bind('<Button-1>',lambda x : subtract_it())
 button_showcurrent.bind()
 button_showall_selisih.bind()
+button_clear.bind('<Button-1>',lambda x : clear_all_entries())
 
 button_test2.bind('<Button-1>' , lambda x : testingbutton())
 window.resizable(False, False)
