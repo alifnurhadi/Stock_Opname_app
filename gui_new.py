@@ -8,7 +8,9 @@ from tkinter.ttk import Combobox, OptionMenu, Style
 from typing import Any, Dict
 from PIL import ImageTk
 from business_logic import *
+import polars as pl
 from rapidfuzz import fuzz , process
+from pandastable import Table
 
 
 OUTPUT_PATH = Path(__file__).parent
@@ -36,8 +38,6 @@ def readloc():
         return f"Error reading locations.txt: {str(e)}"
     
 
-
-logics = DBManager()
 
 # def main_UI():
 window = Tk()
@@ -162,6 +162,8 @@ session_combobox.bind("<<ComboboxSelected>>", lambda event: on_session_select(ev
 reset_button = Button( canvas, text="Reset Session", command= lambda : reset_session(session_combobox), bg="#D9D9D9", fg="#000716", relief="flat" )
 reset_button.place(x=50, y=250, width=70, height=25 , anchor='nw')
 
+logics = DBManager()
+
 canvas.create_text(800.0, 96.0, anchor="nw", text="Maker : Ben", fill="#000000", font=("Inter", -12))
 image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
 canvas.create_image(835.0, 69.0, image=image_image_1)
@@ -202,10 +204,12 @@ def browse_file():
         if filename:
             entry_upload.delete(0, 'end')
             entry_upload.insert(0, filename)
-        try:
-            afterbrowse()
-        except:
-            return
+
+        logics.init_db()
+        # try:
+        #     afterbrowse()
+        # except:
+        #     return
 
 button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
 button_browse = Button(image=button_image_1, borderwidth=0, highlightthickness=0, command=lambda: print("Browse"), relief="flat")
@@ -314,17 +318,15 @@ def simplecalculate():
     return messagebox.showinfo('Result' , f'hasil itungannya: \n {reslt} \n\n ')
 
 def afterbrowse():
-    try:
-        logics.init_db()
-    except Exception as e:
-        messagebox.showerror('Error',e)
+    ...
+    
 
-    init = messagebox.askquestion('Addiionals','want to intialize data?')
-    if init == 'yes':
-        try:
-            DBManager(entry_upload.get()).insert_basic()
-        except Exception as e:
-            messagebox.showerror('Error',e)
+# init = messagebox.askquestion('Addiionals','want to intialize data?')
+# if init == 'yes':
+# try:
+#     DBManager(entry_upload.get()).insert_basic()
+# except Exception as e:
+#     messagebox.showerror('Error',e)
 
 def clear_all_entries():
     clear = messagebox.askquestion('ANSWER','want to clear all?')
@@ -415,9 +417,19 @@ def select_suggestion(event):
         hide_suggestions()
         status_label.config(text=f"Status: Selected {selected}")
 
+def readsku():
+    fullpath = os.path.join(os.path.dirname(__file__),Path(entry_upload.get()).name)
+    ss = pl.read_excel(fullpath , schema_overrides={'SKU':pl.Utf8})
+    skuvalid = ss['SKU'].to_list()
+    return skuvalid
+
 def update_suggestions(event):
-    skusall = logics.show_current()
-    validsku = [code[0] for code in skusall]
+    # if entry_upload.get() != '':
+        # skusall:list[tuple[Any]] = logics.show_current()
+        # validsku = [code[0] for code in skusall]
+
+    validsku = readsku()
+
     query = entry_sku.get().strip()
     if len(query) < 2:  # Require at least 2 characters
         hide_suggestions()

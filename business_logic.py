@@ -46,7 +46,6 @@ class StokOpname_logs :
 class DBManager:
     def __init__(self , sku_path:str=None):
         self.sqlite_path = './stok_opname.db'
-        self.init_db()
         absolute_path = os.path.abspath(self.sqlite_path)
         self.connection_uri = f"sqlite:///{absolute_path}"
         self.sku_path = sku_path if not None else []
