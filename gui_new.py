@@ -136,6 +136,8 @@ entry_koli1.insert(0,'0')
 entry_koli2.insert(0,'0')
 entry_isi1.insert(0,'0')
 entry_isi2.insert(0,'0')
+entry_qty.insert(0,'0')
+entry_qty_tambahan.insert(0,'0')
 
 
 entry_image_12 = PhotoImage(file=relative_to_assets("entry_12.png"))
@@ -206,7 +208,19 @@ def browse_file():
             entry_upload.delete(0, 'end')
             entry_upload.insert(0, filename)
 
-        logics.init_db()
+
+        init = messagebox.askquestion('Database',"Want to start over a database?")
+
+        if init == "yes":
+            dbpath = './stok_opname.db'
+
+            if Path(dbpath).exists():
+                os.remove(dbpath)
+
+            logics.init_db()
+            messagebox.showinfo('Success!'," older databases already deleted and replaced by new ones")
+        else :
+            messagebox.showinfo('Notice!',"ENJOYYY !!!")
         # try:
         #     afterbrowse()
         # except:
@@ -335,6 +349,8 @@ def clear_all_entries(entries = RECAP_ENTRIES):
     if clear == 'yes':
         for k , v in entries:
             print(v.get())
+            if k =='upload':
+                continue
             if k == 'session':
                 reset_session(v)
             else:
@@ -346,6 +362,7 @@ def submitData():
     session = session_combobox.get()
     location = entry_location.get()
     qty = get_fullqty()
+    print(qty)
     addvalue = entry_qty_tambahan.get()
     if addvalue == None or addvalue == '0':
         messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
@@ -367,10 +384,12 @@ def submitData():
             adddingdata = messagebox.askquestion('Other Move', 'want to add more to the current one?')
             if adddingdata == 'yes':
                 logics.modify_add_quantity(session,(addvalue,sku))
+                logics.insertLogs((sku,qty ,logs))
                 clear_all_entries()
                 
         else :
             logics.updating_main_data(session , parame2)
+            logics.insertLogs((sku,qty ,logs))
             clear_all_entries()
 
 def subtract_it():
@@ -511,7 +530,12 @@ def show_all():
     })
     pddf =df.to_pandas()
 
-
+def insert_initdata():
+    global entry_upload
+    path = entry_upload.get()
+    print(path)
+    initdata = DBManager(sku_path=path)
+    initdata.insert_basic()
 
 window.bind_class('Button','<Button-1>',lambda x : generate_fun() , add='+')
 button_browse.bind('<Button-1>', lambda x : browse_file())
@@ -523,7 +547,9 @@ button_showcurrent.bind()
 button_showall_selisih.bind()
 button_clear.bind('<Button-1>',lambda x : clear_all_entries())
 
+button_test1.bind('<Button-1>' , lambda x : insert_initdata() )
 button_test2.bind('<Button-1>' , lambda x : testingbutton())
+
 window.resizable(False, False)
 
 """

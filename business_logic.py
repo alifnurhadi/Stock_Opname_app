@@ -55,6 +55,7 @@ class DBManager:
 
     def init_db(self):
         with sqlite3.connect(self.sqlite_path) as conn:
+            # conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS stok_opname (
                     sku_code VARCHAR(9) PRIMARY KEY,
@@ -67,24 +68,33 @@ class DBManager:
             """)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS so_logs (
-                        create_at TIMESTAMP DEFAULT (datetime('now', 'localtime')),
                         sku_code VARCHAR(9),
-                        quantity INTEGER NULLABLE
-                        activity TEXT
+                        quantity INTEGER NULLABLE,
+                        activity TEXT NULLABLE,
+                        create_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
                 )
             """)
             conn.commit()
+            
 
-    def commit(self , query , param):
-        with sqlite3.connect(self.sqlite_path) as reader:
-            reader.execute(query, param)
-            reader.commit()
+    def commit(self , query , param , many:bool=False):
+        if many != False :
+            with sqlite3.connect(self.sqlite_path) as reader:
+                reader.executemany(query, param)
+                reader.commit()
+        else:
+            with sqlite3.connect(self.sqlite_path) as reader:
+                reader.execute(query, param)
+                reader.commit()
+            
             
     def fetchs (self , query , params:tuple, one:bool = False)-> list[tuple]|tuple:
 
         with sqlite3.connect(self.sqlite_path) as reader:
+            # reader.execute("PRAGMA journal_mode=WAL")
             curr = reader.cursor()
             c_result = curr.execute(query, params)
+            
             return c_result.fetchone() if one else c_result.fetchall()
         
     def insertLogs(self,params:tuple[Any]):
@@ -101,19 +111,21 @@ class DBManager:
             except :
                 return 'need to have SKU column name on ur data maybe it named differently make sure the data consist of 2 column 1st SKU and 2nd is for column contain qty of it'
             
-            sku = sku.with_columns(col(sku.columns[-1]).cast(Int64)).rename({sku.columns[-1]:'Qty'})
+            sku = sku.with_columns(col(sku.columns[-1]).cast(Int64)).rename({sku.columns[-1]:'Qty'}).select(['SKU','Qty'])
             params = list(sku.iter_rows())
+            query = 'INSERT INTO stok_opname(sku_code , current) VALUES (? , ?)'
+            self.commit(query , params , many=True)
+            print('successfull inserting data')
 
         else : 
             sku = []
-        query = 'INSERT INTO stok_opname(sku_code , current) VALUES (? , ?)'
-        self.commit(query , params)
 
 
     def show_current(self)->list[tuple[any],tuple[any]]:
         query = """SELECT * 
         FROM stok_opname ; """
         with sqlite3.connect(self.sqlite_path) as dbs :
+            # dbs.execute("PRAGMA journal_mode=WAL")
             return dbs.execute(query).fetchall()
         
 
@@ -131,18 +143,20 @@ class DBManager:
     def remove_data(self):
 
         with sqlite3.connect(self.sqlite_path) as cnc :
+            # cnc.execute("PRAGMA journal_mode=WAL")
             cnc.execute('DELETE FROM stok_opname')
             cnc.commit()
 
     def remove_spesific (self , sku):
 
         with sqlite3.connect(self.sqlite_path) as cnc :
+            # cnc.execute("PRAGMA journal_mode=WAL")
             cnc.execute('DELETE FROM stok_opname WHERE sku_code = ?' , (sku,))
             cnc.commit()
 
-    def handle_kolian(self , args1 , args2 )->int:
-        if not args1 or not args2 :
-            return None
+    def handle_kolian(self , args1=0 , args2=0 )->int:
+        if args1 == 0 or args2 == 0 :
+            return 0
         else :
             result = args1 * args2
         return result
@@ -152,7 +166,7 @@ class DBManager:
         query = f"""
                 UPDATE stok_opname
                 SET
-                    {column} = {column} - ?
+                    {'so_1' if column == 'SO 1' else 'so_2'} = {'so_1' if column == 'SO 1' else 'so_2'} - ? ,
                     update_at = (datetime('now', 'localtime'))
                     WHERE sku_code = ? ;
                 """
@@ -163,13 +177,13 @@ class DBManager:
         query = f"""
                 UPDATE stok_opname
                 SET
-                    {column} = {column} + ?
+                    {'so_1' if column == 'SO 1' else 'so_2'} = {'so_1' if column == 'SO 1' else 'so_2'} + ? ,
                     update_at = (datetime('now', 'localtime'))
                     WHERE sku_code = ? ;
                 """
         self.commit(query ,params)
         
-    def inserting_main_data(self ,types:str , params:tuple[any]):
+    def inserting_main_data(self ,types:str , params:tuple[any] ):
         '''### the length param should be 3 consist of sku , qty , and its location'''
         
         if not isinstance (params , tuple[any]) & len(params) != 3:
@@ -181,12 +195,13 @@ class DBManager:
         query = f'''INSERT INTO stok_opname (sku_code , {'so_1' if 'SO 1' in types else 'so_2'} , location) VALUES ( ?, ?, ? );'''
 
         theact = f'ADD {params[1]} Locate {params[-1]}'
-        query2 = f'''INSERT INTO so_logs ( sku_code , activity ) VALUES (  ?, ? );'''
+        query2 = f'''INSERT INTO so_logs ( sku_code , {'so_1' if types == 'SO 1' else 'so_2'}, activity ) VALUES (?,  ?, ? );'''
 
         with sqlite3.connect(self.sqlite_path) as conn :
+            # conn.execute("PRAGMA journal_mode=WAL")
             executor = conn.cursor()
-            executor.execute(query , (params))
-            executor.execute(query2 , (params[0],theact))
+            executor.execute(query , params)
+            # executor.execute(query2 , (params[0], params[1] , logss))
             conn.commit()
         
         skuu = params[0]
@@ -202,8 +217,8 @@ class DBManager:
         self.validate_stockOpname(skuu)
         return f"Succesfully updating data of {skuu} @ {times}"
 
-    def updating_main_data(self , column:str , params:tuple[any])-> None:
-        '''### the length param should be 2 consist of new value , and its sku
+    def updating_main_data(self , column:str , params:tuple[any,any])-> None:
+        '''### the length param should be 2 consist of new value , new loc, and its sku
         
         *the **column** param are the column to be set*'''
 
@@ -214,17 +229,19 @@ class DBManager:
             raise ValueError( " u might be missing parameter to set it might be the value or the filter data at least have a len of 2 which first is for the replace value and one other is for filter")
 
         query = f'''UPDATE stok_opname 
-        SET {column} = ? 
+        SET {'so_1' if column == 'SO 1' else 'so_2'} = ? ,
+        location = ? ,
         update_at = (datetime('now', 'localtime'))
         WHERE sku_code = ? ; '''
 
-        theact = f'UPDATE QTY {params[0]} FOR {params[-1]}'
-        query2 = f'''INSERT INTO so_logs ( sku_code , activity ) VALUES (  ?, ? );'''
+        # theact = f'UPDATE QTY {params[0]} FOR {params[-1]} locate at {params[1]}'
+        query2 = f'''INSERT INTO so_logs ( sku_code , {'so_1' if column == 'SO 1' else 'so_2'}, activity ) VALUES (?,  ?, ? );'''
 
         with sqlite3.connect(self.sqlite_path) as conn :
+            # conn.execute("PRAGMA journal_mode=WAL")
             executor = conn.cursor()
-            executor.execute(query , (params))
-            executor.execute(query2 , (params[-1],theact))
+            executor.execute(query , params)
+            # executor.execute(query2 , (params[-1],params[0],logs))
             conn.commit()
 
         self.validate_stockOpname(params[-1])
@@ -238,6 +255,7 @@ class DBManager:
                     WHERE so.so_1 <> so.so_2"""
         
         with sqlite3.connect(self.sqlite_path) as conn :
+            # conn.execute("PRAGMA journal_mode=WAL")
             exc = conn.cursor()
             data_selisih = exc.execute(query).fetchall()
 
@@ -254,6 +272,7 @@ class DBManager:
 
         query = f" SELECT create_at , activity FROM so_logs WHERE sku_code = ? ;"
         with sqlite3.connect(self.sqlite_path) as conn :
+            # conn.execute("PRAGMA journal_mode=WAL")
             exc = conn.cursor()
             tracker = exc.execute(query , (nama_sku,)).fetchall()
 
@@ -266,16 +285,18 @@ class DBManager:
 
     def validate_stockOpname(self , produk:str):
 
-        if not isinstance(produk , str):
-            self.log_progress.logger(product_name=produk , record= f'{datetime.now().timestamp()} - FAILED - Product Not Found' )
-            print( f'sorry there is no such this as {produk} on our list')
-            raise ValueError('sorry data misstyped')
+        # if not isinstance(produk , str):
+        #     self.log_progress.logger(product_name=produk , record= f'{datetime.now().timestamp()} - FAILED - Product Not Found' )
+        #     print( f'sorry there is no such this as {produk} on our list')
+        #     raise ValueError('sorry data misstyped')
         
         query = "SELECT current , so_1 , so_2 , location FROM stok_opname WHERE sku_code = ?"
 
-        with sqlite3.connect('./App3/StokOpname.db') as conn :
+        with sqlite3.connect(self.sqlite_path) as conn :
             executor = conn.cursor()
             result = executor.execute( query , (produk,)).fetchone()
+
+        print(result)
 
         awal = result[0]
         pertama = result[1]
@@ -283,24 +304,24 @@ class DBManager:
         locations = result[-1]
 
         if pertama == 0:
-            print( "can't  do validate data bcs we don't have other data to compare")
-            raise  ValueError('sorry')
+            return  "can't  do validate data bcs we don't have other data to compare"
+            
         
         if awal != pertama:
             msg = f"{datetime.now().timestamp()} - SELISIH - stok-awal = {awal} | 1st SO = {pertama}"
             self.log_progress.logger(produk , record= msg )
-            print(f"sorry both aren't have same or equal value which on 1st SO having {pertama} and current stok arent that way")
-            raise ValueError('sorry difference exist')
+            return f"sorry both aren't have same or equal value which on 1st SO having {pertama} and current stok arent that way"
+            
 
         if  kedua == 0 :
-            print( "can't  do validate data bcs we don't have other data to compare")
-            raise ValueError('sorry')
+            return "can't  do validate data bcs we don't have other data to compare"
+            
 
         if pertama != kedua :
             msg = f"{datetime.now().timestamp()} - SELISIH - 1st SO = {pertama} | 2nd SO = {kedua} ||| Re-check on {locations}"
             self.log_progress.logger(produk , record= msg )
-            print( f"sorry both aren't have same or equal value which on 1st SO having {pertama} while 2nd SO having {kedua}, u can recheck on {locations}")
-            raise ValueError('sorry difference exist')
+            return  f"sorry both aren't have same or equal value which on 1st SO having {pertama} while 2nd SO having {kedua}, u can recheck on {locations}"
+            
 
         return f"Cleared for {produk}"
 
