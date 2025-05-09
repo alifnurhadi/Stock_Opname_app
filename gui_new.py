@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 import random
-from tkinter import Frame, Label, Listbox, StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, filedialog , messagebox
+from tkinter import Frame, Label, Listbox, StringVar, Tk, Canvas, Entry, Text, Button, PhotoImage, Toplevel, filedialog , messagebox
 from tkinter.ttk import Combobox, OptionMenu, Style
 from typing import Any, Dict
 from PIL import ImageTk
@@ -186,6 +186,46 @@ RECAP_ENTRIES : Dict[str,Any] = {
     'calculate':entry_calculator
 }
 
+button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
+button_browse = Button(image=button_image_1, borderwidth=0, highlightthickness=0, command=lambda: print("Browse"), relief="flat")
+button_browse.place(x=398.0, y=55.0, width=89.0, height=51.0)
+button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
+button_add = Button(image=button_image_3, borderwidth=0, highlightthickness=0, command=lambda: print("Add"), relief="flat")
+button_add.place(x=28.0, y=393.0, width=140.0, height=38.0)
+button_image_6 = PhotoImage(file=relative_to_assets("button_6.png"))
+button_subtract = Button(image=button_image_6, text="( - ) Reduce", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("reduce clicked"), relief="flat")
+button_subtract.place(x=189.0, y=393.0, width=140.0, height=38.0)
+button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
+button_showall_selisih = Button(image=button_image_4, text="Show all selisih", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("Show all selisih"), relief="flat")
+button_showall_selisih.place(x=540.0, y=503.0, width=140.0, height=38.0)
+button_image_5 = PhotoImage(file=relative_to_assets("button_5.png"))
+button_export = Button(image=button_image_5, borderwidth=0, highlightthickness=0, command=lambda: print("Export Out"), relief="flat")
+button_export.place(x=721.0, y=502.0, width=140.0, height=38.0)
+button_image_7 = PhotoImage(file=relative_to_assets("button_7.png"))
+button_showcurrent = Button(image=button_image_7, text="Show Current Data", compound="center", font=("Arial", 10, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("show current data"), relief="flat")
+button_showcurrent.place(x=350.0, y=393.0, width=140.0, height=38.0)
+button_image_9 = PhotoImage(file=relative_to_assets("button_9.png"))
+button_track = Button(image=button_image_9, text="Track SKU", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("Track SKU"), relief="flat")
+button_track.place(x=722.0, y=340.0, width=140.0, height=38.0)
+button_image_12 = PhotoImage(file=relative_to_assets("button_12.png"))
+button_validloc = Button(image=button_image_12, font=("Arial", 8), fg="black", borderwidth=0, highlightthickness=0, command=lambda: print("valid location are :\n"), relief="flat")
+button_validloc.place(x=200.0, y=240.0, width=100.0, height=26.0)
+button_image_13 = PhotoImage(file=relative_to_assets("button_13.png"))
+button_clear = Button(image=button_image_13, borderwidth=0, highlightthickness=0, command=lambda: print("clear button clicked"), relief="flat")
+button_clear.place(x=438.0, y=449.0, width=46.0, height=23.0)
+button_image_2 = PhotoImage(file=relative_to_assets("button_2.png"))
+button_calculating = Button(image=button_image_2, borderwidth=0, highlightthickness=0, command=lambda: print("now calculating"), relief="flat")
+button_calculating.place(x=786.0, y=142.0, width=43.0, height=41.0)
+button_image_8 = PhotoImage(file=relative_to_assets("button_8.png"))
+button_test3 = Button(image=button_image_8,borderwidth=0,highlightthickness=0,command=lambda: print(f"session {session_combobox.get()} ___ button_session clicked"),text='in-test 3!',compound='center',font=('Arial',12 , 'bold') , fg='white',relief="flat")
+button_test3.place(x=722.0,y=442.0,width=140.0,height=38.0)
+button_image_10 = PhotoImage(file=relative_to_assets("button_10.png"))
+button_test2 = Button(image=button_image_10,borderwidth=0,highlightthickness=0,command=lambda: print("button_10 clicked"),text='test->Validate',compound='center',font=('Arial',12 , 'bold') , fg='white',relief="flat")
+button_test2.place(x=540.0,y=442.0,width=140.0,height=38.0)
+button_image_11 = PhotoImage(file=relative_to_assets("button_11.png"))
+button_test1 = Button(image=button_image_11,borderwidth=0,highlightthickness=0,command=lambda: print('sss'),text='test->Insert basic',font=('Arial',12 , 'bold') , fg='white',compound='center',relief="flat")
+button_test1.place(x=540.0,y=340.0,width=140.0,height=38.0)
+
 def debug():
     data = [entry_sku , entry_qty , entry_qty_tambahan , entry_koli1 , 
             entry_koli2 , entry_upload , entry_keterangan , entry_result , 
@@ -221,50 +261,6 @@ def browse_file():
             messagebox.showinfo('Success!'," older databases already deleted and replaced by new ones")
         else :
             messagebox.showinfo('Notice!',"ENJOYYY !!!")
-        # try:
-        #     afterbrowse()
-        # except:
-        #     return
-
-button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
-button_browse = Button(image=button_image_1, borderwidth=0, highlightthickness=0, command=lambda: print("Browse"), relief="flat")
-button_browse.place(x=398.0, y=55.0, width=89.0, height=51.0)
-button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
-button_add = Button(image=button_image_3, borderwidth=0, highlightthickness=0, command=lambda: print("Add"), relief="flat")
-button_add.place(x=28.0, y=393.0, width=140.0, height=38.0)
-button_image_6 = PhotoImage(file=relative_to_assets("button_6.png"))
-button_subtract = Button(image=button_image_6, text="( - ) Reduce", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("reduce clicked"), relief="flat")
-button_subtract.place(x=189.0, y=393.0, width=140.0, height=38.0)
-button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
-button_showall_selisih = Button(image=button_image_4, text="Show all selisih", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("Show all selisih"), relief="flat")
-button_showall_selisih.place(x=540.0, y=503.0, width=140.0, height=38.0)
-button_image_5 = PhotoImage(file=relative_to_assets("button_5.png"))
-button_export = Button(image=button_image_5, borderwidth=0, highlightthickness=0, command=lambda: print("Export Out"), relief="flat")
-button_export.place(x=721.0, y=502.0, width=140.0, height=38.0)
-button_image_7 = PhotoImage(file=relative_to_assets("button_7.png"))
-button_showcurrent = Button(image=button_image_7, text="Show Current Data", compound="center", font=("Arial", 10, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("show current data"), relief="flat")
-button_showcurrent.place(x=350.0, y=393.0, width=140.0, height=38.0)
-button_image_9 = PhotoImage(file=relative_to_assets("button_9.png"))
-button_track = Button(image=button_image_9, text="Track SKU", compound="center", font=("Arial", 12, "bold"), fg="white", borderwidth=0, highlightthickness=0, command=lambda: print("Track SKU"), relief="flat")
-button_track.place(x=722.0, y=340.0, width=140.0, height=38.0)
-button_image_12 = PhotoImage(file=relative_to_assets("button_12.png"))
-button_validloc = Button(image=button_image_12, font=("Arial", 8), fg="black", borderwidth=0, highlightthickness=0, command=lambda: print("valid location are :\n"), relief="flat")
-button_validloc.place(x=200.0, y=240.0, width=100.0, height=26.0)
-button_image_13 = PhotoImage(file=relative_to_assets("button_13.png"))
-button_clear = Button(image=button_image_13, borderwidth=0, highlightthickness=0, command=lambda: print("clear button clicked"), relief="flat")
-button_clear.place(x=438.0, y=449.0, width=46.0, height=23.0)
-button_image_2 = PhotoImage(file=relative_to_assets("button_2.png"))
-button_calculating = Button(image=button_image_2, borderwidth=0, highlightthickness=0, command=lambda: print("now calculating"), relief="flat")
-button_calculating.place(x=786.0, y=142.0, width=43.0, height=41.0)
-button_image_8 = PhotoImage(file=relative_to_assets("button_8.png"))
-button_test3 = Button(image=button_image_8,borderwidth=0,highlightthickness=0,command=lambda: print(f"session {session_combobox.get()} ___ button_session clicked"),text='in-test 3!',compound='center',font=('Arial',12 , 'bold') , fg='white',relief="flat")
-button_test3.place(x=722.0,y=442.0,width=140.0,height=38.0)
-button_image_10 = PhotoImage(file=relative_to_assets("button_10.png"))
-button_test2 = Button(image=button_image_10,borderwidth=0,highlightthickness=0,command=lambda: print("button_10 clicked"),text='in-test 2!',compound='center',font=('Arial',12 , 'bold') , fg='white',relief="flat")
-button_test2.place(x=540.0,y=442.0,width=140.0,height=38.0)
-button_image_11 = PhotoImage(file=relative_to_assets("button_11.png"))
-button_test1 = Button(image=button_image_11,borderwidth=0,highlightthickness=0,command=lambda: print('sss'),text='in-test 1!',font=('Arial',12 , 'bold') , fg='white',compound='center',relief="flat")
-button_test1.place(x=540.0,y=340.0,width=140.0,height=38.0)
 
 def create_logs(action , recap_entry: Dict[str, Entry] = RECAP_ENTRIES)->str:
     ket = action
@@ -282,10 +278,10 @@ def create_logs(action , recap_entry: Dict[str, Entry] = RECAP_ENTRIES)->str:
     
     texts = f"{datetime.now().strftime('%H:%M || "%d/%m')} - {ket}, {sku} - (main: {qty}, opt: {qty_tambahan}) - at {session}"
 
-    if keterangan or koli1 != '0' or koli2 != '0':
-        texts += f"\n- (isi & kolian: {isi1}, {koli1}, {isi2}, {koli2}) - {keterangan or 'No keterangan'}"
-    elif koli1 != '0' or koli2 != '0':
-        texts += f"\n- (isi & kolian: {isi1}, {koli1}, {isi2}, {koli2}) - {koli1}@{isi1} & {koli2}@{isi2}"
+    if koli1 != '0' or koli2 != '0':
+        texts += f"\n - {koli1}@{isi1} & {koli2}@{isi2}"
+    if keterangan :
+        texts += f"\n- {keterangan or ''}"
 
     return texts
 
@@ -332,32 +328,24 @@ def simplecalculate():
     
     return messagebox.showinfo('Result' , f'hasil itungannya: \n {reslt} \n\n ')
 
-def afterbrowse():
-    ...
-    
-
-# init = messagebox.askquestion('Addiionals','want to intialize data?')
-# if init == 'yes':
-# try:
-#     DBManager(entry_upload.get()).insert_basic()
-# except Exception as e:
-#     messagebox.showerror('Error',e)
-
-def clear_all_entries(entries = RECAP_ENTRIES):
-    
+def clear_all_entries():
+    global RECAP_ENTRIES
+    entries:dict[str,Any] = RECAP_ENTRIES
     clear = messagebox.askquestion('ANSWER','want to clear all?')
     if clear == 'yes':
-        for k , v in entries:
+        for k , v in entries.items():
             print(v.get())
-            if k =='upload':
+            if k =='upload' or k == 'sku':
                 continue
-            if k == 'session':
+            elif k == 'session':
                 reset_session(v)
+            elif any(s in k for s in ('qty', 'koli', 'isi')):
+                v.delete(0,'end')
+                v.insert(0,'0')
             else:
                 v.delete(0,'end')
 
 def submitData():
-    
     sku = entry_sku.get()
     session = session_combobox.get()
     location = entry_location.get()
@@ -368,7 +356,7 @@ def submitData():
         messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
 
     parame1 = (sku,qty,location)
-    parame2 = (qty , sku)
+    parame2 = (qty ,location, sku)
 
     logs = create_logs('tambah')
 
@@ -379,7 +367,7 @@ def submitData():
         
     except:
         messagebox.showinfo('WARNING' ,'There might already value there, might consider to update instead of add')
-        updatevalue = messagebox.askquestion('Next Move','Move to update its value and reset older ones?')
+        updatevalue = messagebox.askquestion('Next Move',f'if "yes" it will update its value and reset older {session} data?')
         if updatevalue == 'no':
             adddingdata = messagebox.askquestion('Other Move', 'want to add more to the current one?')
             if adddingdata == 'yes':
@@ -392,27 +380,37 @@ def submitData():
             logics.insertLogs((sku,qty ,logs))
             clear_all_entries()
 
-def subtract_it():
+def validate():
+
+    thesku = entry_sku.get()
+    result = logics.validate_stockOpname(thesku)
+
+    if "ERROR" in result.keys():
+        messagebox.showwarning("ERROR",result['ERROR'])
+    elif "SUCCEED" in result.keys():
+        messagebox.showinfo('SUCCEED',result['SUCCEED'])
+
+def subtract_it(): 
     global RECAP_ENTRIES
     addvalue = entry_qty_tambahan.get()
     if addvalue == None or addvalue == '0':
         messagebox.showwarning('Warning',"Make sure -- 'qty tambahan' -- are filled when want to add more value to the current one or it will lead to error result at the end")
     param = (addvalue , RECAP_ENTRIES['sku'].get())
+    logs = create_logs('kurang')
+    param2 = (RECAP_ENTRIES['sku'].get() , addvalue , logs)
     logics.modify_subtract_quantity(RECAP_ENTRIES['session'].get(), param)
+    logics.insertLogs(param2)
 
     messagebox.showinfo('Logs :',f"u've just subtracting data from {RECAP_ENTRIES['sku'].get()} about {addvalue}")
 
 
 def testingbutton():
-    respon = messagebox.askquestion('Are u sure ?','want to continue to another operation?')
-    print(f'respon 1 : {respon} + {create_logs('tambah')} ')
-    if respon == 'no':
-        respon = messagebox.askquestion('Are u sure ?','want to continue to another operation?')
-        print(f'respon 2 :  ({respon} + {create_logs('tambah')})')
-    else:
-        print(f'respon 1 : {respon} + {create_logs('tambah')} ')
-        messagebox.showinfo('Thank','You')
-
+    global entry_result
+    respon = messagebox.askquestion('Are u sure ?','want to see the logs?')
+    userwanttosee = f'ur logs : {create_logs('tambah')}'
+    print(userwanttosee)
+    if respon:
+        entry_result.insert(0,f'ur logs : {create_logs('tambah')}')
 
 suggestion_list = Listbox(window, height=5, width=2, font=("Arial", 10))
 suggestion_list.place(x=372.0, y=178.0, width=99.0)
@@ -479,33 +477,21 @@ hide_suggestions()
 entry_sku.bind("<KeyRelease>", update_suggestions)
 suggestion_list.bind("<<ListboxSelect>>", select_suggestion)
 
+
+table = None
+table_window = None
+
 def create_table(parent_frame, dataframe):
-    frame = Frame(parent_frame)
+    global table ,table_window
+    table_window = Toplevel(parent_frame)
+    table_window.title("Stock Opname Table")
+    table_window.geometry("800x400")
+    table_window.protocol("WM_DELETE_WINDOW", lambda: table_window.destroy())
+    frame = Frame(table_window)
     frame.pack(fill="both", expand=True)
     table = Table(frame, dataframe=dataframe, showtoolbar=True, showstatusbar=True)
     table.show()
     return table
-
-# Variable to store the table object (initially None)
-table = None
-
-# Add buttons for interaction
-def print_table():
-    global table
-    if table is not None:
-        print(table.model.df)
-    else:
-        print("Table not created yet")
-
-def create_and_update_table(df):
-    global table
-    if table is None:
-        # Create the table only if it doesn't exist
-        table = create_table(window, df)
-    # Update the DataFrame (e.g., change a value)
-    df.loc[df['SKU'] == '50706', 'week1'] = 5
-    table.model.df = df  # Update the table's DataFrame
-    table.redraw()
 
 def show_all():
     data = logics.show_current()
@@ -530,6 +516,50 @@ def show_all():
     })
     pddf =df.to_pandas()
 
+    if table_window is not None:
+        table_window.destroy()
+
+    tablewindow = create_table(window , pddf)
+    
+    return df
+
+def showall_selisih():
+    
+    datas = logics.show_selisih()
+    print(datas)
+
+    polar = pl.DataFrame(datas)
+    pandas = polar.to_pandas()
+
+    if table_window is not None:
+        table_window.destroy()
+
+    table = create_table(window ,pandas)
+
+    return
+
+def trackselisih():
+
+    sku = entry_sku.get()
+    if sku == None or sku == '':
+        messagebox.showwarning('Notice','u forgot to place the sku code , PLACE IT or u"ll get nothing.')
+        return
+    
+    datas = logics.track_selisih(sku)
+    print(datas)
+    keys = list(datas.keys())
+    
+    datapl = pl.DataFrame(datas)
+
+    pandas = datapl.to_pandas()
+
+    if table_window is not None:
+        table_window.destroy()
+
+    table = create_table(window ,pandas)
+
+    return
+
 def insert_initdata():
     global entry_upload
     path = entry_upload.get()
@@ -537,18 +567,33 @@ def insert_initdata():
     initdata = DBManager(sku_path=path)
     initdata.insert_basic()
 
+def export() :
+
+    datasf = show_all()
+
+    namee = entry_result.get()
+    fullname = f'./Hasil-{namee}'
+
+    datasf.write_excel(fullname , autofit=True)
+
+
+entry_result.bind('<FocusOut>', lambda x : x.widget.delete(0,'end') )
+
 window.bind_class('Button','<Button-1>',lambda x : generate_fun() , add='+')
 button_browse.bind('<Button-1>', lambda x : browse_file())
 button_validloc.bind("<Button-1>", lambda event: messagebox.showinfo("Valid Locations", f"valid locations are :\n{readloc()}"))
 button_calculating.bind('<Button-1>' , lambda x : simplecalculate())
 button_add.bind('<Button-1>' , lambda x : submitData())
 button_subtract.bind('<Button-1>',lambda x : subtract_it())
-button_showcurrent.bind()
-button_showall_selisih.bind()
-button_clear.bind('<Button-1>',lambda x : clear_all_entries())
+button_showcurrent.bind('<Button-1>' , lambda _ : show_all())
+button_showall_selisih.bind('<Button-1>' , lambda _ : showall_selisih())
+button_track.bind('<Button-1>' , lambda _ : trackselisih())
+button_clear.bind('<Button-1>',lambda x :clear_all_entries())
+button_export
 
 button_test1.bind('<Button-1>' , lambda x : insert_initdata() )
-button_test2.bind('<Button-1>' , lambda x : testingbutton())
+button_test2.bind('<Button-1>' , lambda x : validate())
+button_test3.bind('<Button-1>' , lambda x : testingbutton())
 
 window.resizable(False, False)
 
