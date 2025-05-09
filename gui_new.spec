@@ -57,3 +57,4 @@ exe = EXE(
     entitlements_file=None,
     icon=[],
 )
+

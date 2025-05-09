@@ -449,7 +449,8 @@ def update_suggestions(event):
         # skusall:list[tuple[Any]] = logics.show_current()
         # validsku = [code[0] for code in skusall]
 
-    validsku = readsku()
+    validsku = readsku() 
+    
 
     query = entry_sku.get().strip()
     if len(query) < 2:  # Require at least 2 characters
