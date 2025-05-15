@@ -64,7 +64,7 @@ canvas.create_text(32.0, 324.0, anchor="nw", text="Keterangan :", fill="#000000"
 canvas.create_text(217.00001525878906, 127.0, anchor="nw", text="LOCATION", fill="#000000", font=("Inter Bold", -12))
 canvas.create_text(372.0, 127.0, anchor="nw", text="SKU :", fill="#000000", font=("Inter Bold", -12))
 canvas.create_text(372.0, 188.0, anchor="nw", text="Quantity :", fill="#000000", font=("Inter Bold", -12))
-canvas.create_text(372.0, 258.0, anchor="nw", text="Qty tambahan :", fill="#000000", font=("Inter Bold", -10))
+# canvas.create_text(372.0, 258.0, anchor="nw", text="Qty tambahan :", fill="#000000", font=("Inter Bold", -10))
 canvas.create_text(271.0, 329.0, anchor="nw", text="Koli:", fill="#000000", font=("Inter Bold", -8))
 canvas.create_text(391.0, 329.0, anchor="nw", text="Koli:", fill="#000000", font=("Inter Bold", -8))
 canvas.create_text(327.0, 329.0, anchor="nw", text="isi:", fill="#000000", font=("Inter Bold", -8))
@@ -100,7 +100,7 @@ entry_bg_5 = canvas.create_image(411.0, 359.5, image=entry_image_5)
 entry_bg_10 = canvas.create_image(345.0, 359.5, image=entry_image_10)
 entry_bg_11 = canvas.create_image(465.0, 359.5, image=entry_image_11)
 entry_bg_2 = canvas.create_image(421.5, 223.5, image=entry_image_2)
-entry_bg_3 = canvas.create_image(421.5, 291.5, image=entry_image_3)
+entry_bg_3 = canvas.create_image(421.5, 291.5, image=entry_image_3) ## this will be replaced by a button
 entry_bg_9 = canvas.create_image(250.5, 181.5, image=entry_image_9)
 entry_bg_6 = canvas.create_image(204.0, 82.5, image=entry_image_6)
 entry_bg_7 = canvas.create_image(129.0, 359.5, image=entry_image_7)
@@ -278,8 +278,10 @@ def create_logs(action , recap_entry: Dict[str, Entry] = RECAP_ENTRIES)->str:
     
     texts = f"{datetime.now().strftime('%H:%M || "%d/%m')} - {ket}, {sku} - (main: {qty}, opt: {qty_tambahan}) - at {session}"
 
-    if koli1 != '0' or koli2 != '0':
-        texts += f"\n - {koli1}@{isi1} & {koli2}@{isi2}"
+    if koli1 != '0':
+        texts += f"\n - {koli1}@{isi1}"
+    if koli2 != '0':
+        texts += f"\n - & {koli2}@{isi2}"
     if keterangan :
         texts += f"\n- {keterangan or ''}"
 
@@ -420,16 +422,18 @@ def hide_suggestions():
     global suggestion_list_visible 
     suggestion_list_visible = False
     suggestion_list.place_forget()
+ 
 
 status_label = Label(window, text="Status: Ready", font=("Arial", 10), bg="#CDCDCA")
 status_label.place(x=555, y=55)
 
-def show_suggestions():
-    global suggestion_list_visible
-    suggestion_list_visible = True
-    suggestion_list.place(x=372.0, y=178.0, width=99.0)
+def show_suggestions(sku:bool=True):
+    if sku:
+        global suggestion_list_visible
+        suggestion_list_visible = True
+        suggestion_list.place(x=372.0, y=178.0, width=99.0)
 
-
+    
 def select_suggestion(event):
     if suggestion_list.curselection():
         selected = suggestion_list.get(suggestion_list.curselection())
@@ -438,19 +442,23 @@ def select_suggestion(event):
         hide_suggestions()
         status_label.config(text=f"Status: Selected {selected}")
 
-def readsku():
-    fullpath = os.path.join(os.path.dirname(__file__),Path(entry_upload.get()).name)
-    ss = pl.read_excel(fullpath , schema_overrides={'SKU':pl.Utf8})
-    skuvalid = ss['SKU'].to_list()
+
+def reads(use_entry:bool=True):
+    if use_entry:
+        fullpath = os.path.join(os.path.dirname(__file__),Path(entry_upload.get()).name)
+        ss = pl.read_excel(fullpath , schema_overrides={'SKU':pl.Utf8})
+        skuvalid = ss['SKU'].to_list()
+    else:
+        locs:str = readloc()
+        return locs.split(sep='\n')
     return skuvalid
 
-def update_suggestions(event):
-    # if entry_upload.get() != '':
-        # skusall:list[tuple[Any]] = logics.show_current()
-        # validsku = [code[0] for code in skusall]
+def update_suggestions(event , forloc:bool=False):
 
-    validsku = readsku() 
-    
+    if forloc:
+        valid_data = reads(use_entry=False)
+    else:
+        valid_data = reads()
 
     query = entry_sku.get().strip()
     if len(query) < 2:  # Require at least 2 characters
@@ -459,10 +467,9 @@ def update_suggestions(event):
         return
 
     # Fuzzy match
-    matches = process.extract(query, validsku , scorer=fuzz.partial_ratio, limit=5)
+    matches = process.extract(query, valid_data , scorer=fuzz.partial_ratio, limit=5)
     suggestions = [match[0] for match in matches if match[1] > 70]  # Threshold: 70%
 
-    # Update Listbox
     suggestion_list.delete(0, "end")
     for suggestion in suggestions:
         suggestion_list.insert("end", suggestion)
@@ -474,9 +481,11 @@ def update_suggestions(event):
         hide_suggestions()
         status_label.config(text="Status: No matches found")
 
+
 hide_suggestions()
 entry_sku.bind("<KeyRelease>", update_suggestions)
 suggestion_list.bind("<<ListboxSelect>>", select_suggestion)
+
 
 
 table = None
@@ -494,7 +503,7 @@ def create_table(parent_frame, dataframe):
     table.show()
     return table
 
-def show_all():
+def show_all(sku:str=None):
     data = logics.show_current()
     sku = []
     current = []
@@ -507,7 +516,7 @@ def show_all():
         so_1.append(d[2])
         so_2.append(d[3])
         locs.append(d[4])
-
+    
     df = pl.DataFrame({
         'SKU':sku,
         'Current':current,
@@ -515,6 +524,10 @@ def show_all():
         'SO 2':so_2,
         'Location':locs,
     })
+
+    if sku != None:
+        df = df.filter(pl.col('SKU')==sku)
+
     pddf =df.to_pandas()
 
     if table_window is not None:
@@ -561,19 +574,34 @@ def trackselisih():
 
     return
 
+
 def insert_initdata():
     global entry_upload
     path = entry_upload.get()
-    print(path)
-    initdata = DBManager(sku_path=path)
-    initdata.insert_basic()
+    try:
+        initdata = DBManager(sku_path=path)
+        initdata.insert_basic()
 
-def export() :
+    except:
+        messagebox.showinfo('INFO','Processing.... \n backuping datas ....')
+
+        export(backup=True)
+        query = 'DELETE FROM stok_opname'
+        logics.commit(query)
+        initdata = DBManager(sku_path=path)
+        initdata.insert_basic()
+
+
+
+def export(backup:bool=False) :
 
     datasf = show_all()
 
     namee = entry_result.get()
-    fullname = f'./Hasil-{namee}'
+    
+    fullname = f'./Hasil- {namee if not "" else "SO"+datetime.now().strftime('%b%Y') }'
+    if backup:
+        fullname = f'Backup Hasil SO Terakhir'
 
     datasf.write_excel(fullname , autofit=True)
 
